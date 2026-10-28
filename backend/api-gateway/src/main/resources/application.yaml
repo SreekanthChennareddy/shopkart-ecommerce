@@ -1,0 +1,93 @@
+server:
+  port: 8080 # The single front-door port for the entire ShopKart system
+
+
+spring:
+  main:
+    web-application-type: reactive # <-- MUST BE HERE
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false # We define explicit routes below for security and control
+
+      # Routes Definitions
+      routes:
+      # ==========================================
+      # 1. AUTH SERVICE ROUTE
+      # ==========================================
+        - id: auth-service-route
+          uri: lb://AUTH-SERVICE  # 'lb://' means load-balanced across Eureka instances!
+          predicates:
+            - Path=/api/v1/auth/**
+          filters:
+            # Circuit breaker protection
+            - name: CircuitBreaker
+              args:
+                name: authServiceCircuitBreaker
+                fallbackUri: forward:/fallback/auth
+        # ==========================================
+        # 2. PRODUCT SERVICE ROUTE (Ready for next step)
+        # ==========================================
+        - id: product-service-route
+          uri: lb://PRODUCT-SERVICE
+          predicates:
+            - Path=/api/v1/products/**, /api/v1/categories/**, /api/v1/media/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: productServiceCircuitBreaker
+                fallbackUri: forward:/fallback/products
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+# Resilience4j Circuit Breaker Settings
+resilience4j:
+  circuitbreaker:
+    instances:
+      authServiceCircuitBreaker:
+        slidingWindowSize: 10              # Inspect last 10 calls
+        permittedNumberOfCallsInHalfOpenState: 3
+        failureRateThreshold: 50           # If 50% of calls fail -> OPEN circuit
+        waitDurationInOpenState: 10000ms   # Wait 10s before testing service again
+        slowCallDurationThreshold: 3000ms  # Calls taking > 3s are considered failures
+        slowCallRateThreshold: 50
+      productServiceCircuitBreaker: # <-- Add this instance!
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000ms
+        slowCallDurationThreshold: 3000ms
+        slowCallRateThreshold: 50
+  timelimiter:
+    instances:
+      authServiceCircuitBreaker:
+        timeoutDuration: 3000ms
+      productServiceCircuitBreaker:
+        timeoutDuration: 5000ms
+
+
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,gateway
+  tracing:
+    sampling:
+      probability: 1.0 # 1.0 = Sample 100% of requests (use 0.1 for 10% in production)
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
+
+

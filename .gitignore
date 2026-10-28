@@ -1,0 +1,54 @@
+# ==========================================
+# Java & Maven Artifacts (Backend)
+# ==========================================
+**/target/
+**/out/
+*.class
+*.jar
+*.war
+*.ear
+
+# Maven Wrapper & Log files
+.mvn/
+mvnw
+mvnw.cmd
+*.log
+
+# ==========================================
+# Node.js & React Artifacts (Frontend)
+# ==========================================
+**/node_modules/
+**/dist/
+**/build/
+.npm
+.eslintcache
+
+# Sensitive Environment Files (Never push secrets/keys!)
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# ==========================================
+# IDE & Editor Files
+# ==========================================
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==========================================
+# Gemini / AI Assistant Metadata
+# ==========================================
+.gemini/
+.agents/

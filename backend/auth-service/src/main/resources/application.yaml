@@ -1,0 +1,54 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: auth-service
+
+  datasource:
+    shard0:
+      jdbc-url: jdbc:postgresql://localhost:5432/shopkart_auth_0
+      username: postgres
+      password: password
+      driver-class-name: org.postgresql.Driver
+    shard1:
+      jdbc-url: jdbc:postgresql://localhost:5432/shopkart_auth_1
+      username: postgres
+      password: password
+      driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create # Creates/updates tables automatically in dev
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+
+
+
+# Custom JWT configuration
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  expiration: 86400000
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0 # 100% distributed trace sampling
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
